@@ -1,5 +1,5 @@
 import Foundation
-import TaskHelmCore
+import MagpieCore
 
 enum BrowserSortField: String, CaseIterable {
     case urgency

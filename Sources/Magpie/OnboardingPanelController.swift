@@ -54,7 +54,7 @@ final class OnboardingPanelController: NSWindowController {
             backing: .buffered,
             defer: false
         )
-        panel.title = "Welcome to TaskHelm"
+        panel.title = "Welcome to Magpie"
         panel.isFloatingPanel = true
         panel.level = .floating
         panel.hidesOnDeactivate = false

@@ -1,8 +1,8 @@
-# TaskHelm contributor guidance
+# Magpie contributor guidance
 
 ## Product and language
 
-TaskHelm is a native macOS companion for Taskwarrior, not a replacement task
+Magpie is a native macOS companion for Taskwarrior, not a replacement task
 manager. Taskwarrior remains authoritative for task data, configuration,
 contexts, hooks, recurrence, urgency, user-defined attributes, and sync.
 
@@ -27,8 +27,8 @@ decisions, not optional suggestions.
 - Use SwiftUI for ordinary UI. Use AppKit only where native macOS integration
   requires it (for example global shortcuts, panels, focus, menu-bar lifecycle,
   and Accessibility APIs).
-- `Sources/TaskHelmCore/` owns Taskwarrior models, process execution, and CLI
-  integration. `Sources/TaskHelm/` owns application, window, view, and
+- `Sources/MagpieCore/` owns Taskwarrior models, process execution, and CLI
+  integration. `Sources/Magpie/` owns application, window, view, and
   view-model behavior.
 - Keep views thin and put async/task state in `@MainActor` view models. Depend
   on the existing protocols (`TaskwarriorServing`, `TaskBrowsing`, and
@@ -69,7 +69,7 @@ swift test
 ./scripts/build-app.sh debug
 ```
 
-The development bundle is written to `build/TaskHelm.app`. Run it with:
+The development bundle is written to `build/Magpie.app`. Run it with:
 
 ```sh
 ./scripts/run-dev-app.sh
@@ -77,8 +77,8 @@ The development bundle is written to `build/TaskHelm.app`. Run it with:
 
 Add focused regression tests alongside changes:
 
-- Core Taskwarrior behavior: `Tests/TaskHelmCoreTests/`
-- App, UI, panel, and view-model behavior: `Tests/TaskHelmTests/`
+- Core Taskwarrior behavior: `Tests/MagpieCoreTests/`
+- App, UI, panel, and view-model behavior: `Tests/MagpieTests/`
 
 Use test doubles for CLI behavior in unit tests. The integration tests require a
 real, isolated Taskwarrior environment; do not weaken them to accommodate local

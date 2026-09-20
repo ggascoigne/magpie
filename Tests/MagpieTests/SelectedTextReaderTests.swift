@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import TaskHelm
+@testable import Magpie
 
 @Suite("Selected text permission")
 struct SelectedTextReaderTests {

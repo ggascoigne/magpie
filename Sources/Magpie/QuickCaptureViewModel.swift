@@ -1,5 +1,5 @@
 import Foundation
-import TaskHelmCore
+import MagpieCore
 
 @MainActor
 final class QuickCaptureViewModel: ObservableObject {

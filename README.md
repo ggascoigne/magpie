@@ -1,4 +1,8 @@
-# TaskHelm
+# Magpie
+
+<p align="center">
+  <img src="Resources/Magpie.iconset/icon_512x512.png" alt="Magpie app icon" width="256">
+</p>
 
 A native macOS companion for Taskwarrior. Taskwarrior remains authoritative for task data, configuration, contexts, hooks, urgency, recurrence, and synchronization.
 
@@ -17,14 +21,14 @@ swift test
 ./scripts/build-app.sh debug
 ```
 
-The application bundle is written to `build/TaskHelm.app`. Run it during development with:
+The application bundle is written to `build/Magpie.app`. Run it during development with:
 
 ```sh
 ./scripts/run-dev-app.sh
 ```
 
 Development builds use a stable local designated requirement so macOS privacy grants survive rebuilds. Set
-`TASKHELM_SIGNING_IDENTITY` to use an installed Apple or local code-signing identity instead.
+`MAGPIE_SIGNING_IDENTITY` to use an installed Apple or local code-signing identity instead.
 
 Quick Capture defaults to `Control-Option-Space`. Its shortcut, Taskwarrior executable, optional taskrc path, selected-text capture, and Launch at Login behavior are configured in Settings.
 
@@ -67,6 +71,6 @@ No measurements leave the Mac.
 
 Browser refresh re-reads local Taskwarrior data after client mutations, when the window regains focus,
 on request, and approximately every five seconds while visible. Synchronization with a remote Taskwarrior
-replica remains externally managed and is not triggered by TaskHelm.
+replica remains externally managed and is not triggered by Magpie.
 
 See [the product brief](docs/product-brief.md) for the agreed scope and [the domain glossary](CONTEXT.md) for canonical language.

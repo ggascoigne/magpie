@@ -1,8 +1,8 @@
-# TaskHelm Product Brief
+# Magpie Product Brief
 
 ## Product intent
 
-TaskHelm is a clean native Mac interface for experienced Taskwarrior users. It improves capture and browsing without becoming a separate task manager: Taskwarrior remains authoritative for task data, configuration, contexts, hooks, urgency, recurrence, synchronization, and user-defined attributes.
+Magpie is a clean native Mac interface for experienced Taskwarrior users. It improves capture and browsing without becoming a separate task manager: Taskwarrior remains authoritative for task data, configuration, contexts, hooks, urgency, recurrence, synchronization, and user-defined attributes.
 
 The app is initially built for Guy's workflow, with enough configuration and error handling to remain useful to other experienced Taskwarrior users. Public release timing is deliberately undefined; the app should be dogfooded before it is packaged for others.
 
@@ -13,7 +13,7 @@ The app is initially built for Guy's workflow, with enough configuration and err
 - Menu-bar resident, with optional Launch at Login.
 - Direct distribution outside the Mac App Store; signing and notarization are expected before sharing.
 - MIT/open-source release posture.
-- The product name is `TaskHelm`; lowercase identifiers use `taskhelm`.
+- The product name is `Magpie`; lowercase identifiers use `magpie`.
 - No app-owned networking in the initial product: no telemetry, crash uploads, update checks, or cloud service.
 
 ## Taskwarrior integration

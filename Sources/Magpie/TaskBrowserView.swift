@@ -1,6 +1,6 @@
 import AppKit
 import SwiftUI
-import TaskHelmCore
+import MagpieCore
 import UniformTypeIdentifiers
 
 enum BrowserBoardLayout {
@@ -94,7 +94,7 @@ struct TaskBrowserView: View {
         } detail: {
             browserContent
         }
-        .navigationTitle("TaskHelm — \(model.view.title)")
+        .navigationTitle("Magpie — \(model.view.title)")
         .toolbar { browserToolbar }
         .focusedSceneValue(\.taskBrowserCommands, commandActions)
         .task {

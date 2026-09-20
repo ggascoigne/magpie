@@ -1,8 +1,8 @@
 import AppKit
 import SwiftUI
 import Testing
-import TaskHelmCore
-@testable import TaskHelm
+import MagpieCore
+@testable import Magpie
 
 @MainActor
 @Suite("Quick Capture regressions", .serialized)
@@ -58,7 +58,7 @@ struct QuickCaptureRegressionTests {
 
     @Test func successfulCreationAnnouncesThatBrowserDataChanged() async {
         let client = RecordingTaskwarriorClient()
-        let notification = Notification.Name("TaskHelmTaskCreated")
+        let notification = Notification.Name("MagpieTaskCreated")
         var receivedCount = 0
         let observer = NotificationCenter.default.addObserver(
             forName: notification,

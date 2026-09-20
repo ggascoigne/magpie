@@ -24,7 +24,7 @@ struct QuickCaptureLatencyTrace: Sendable {
 
 enum QuickCaptureLatency {
     private static let log = OSLog(
-        subsystem: Bundle.main.bundleIdentifier ?? "dev.ggp.taskhelm",
+        subsystem: Bundle.main.bundleIdentifier ?? "dev.ggp.magpie",
         category: "QuickCaptureLatency"
     )
 

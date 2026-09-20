@@ -1,7 +1,7 @@
 import Foundation
 import Testing
-import TaskHelmCore
-@testable import TaskHelm
+import MagpieCore
+@testable import Magpie
 
 @MainActor
 @Suite("Task Browser model")
@@ -23,14 +23,14 @@ struct TaskBrowserViewModelTests {
         let model = TaskBrowserViewModel(client: client, defaults: ephemeralDefaults())
 
         await model.selectView(.completed)
-        await model.toggleProject("TaskHelm")
+        await model.toggleProject("Magpie")
         await model.toggleProject("Personal")
         await model.toggleTag("focus")
         await model.toggleTag("skill")
 
         #expect(client.queries.last == TaskQuery(
             view: .completed,
-            projects: ["Personal", "TaskHelm"],
+            projects: ["Magpie", "Personal"],
             tags: ["focus", "skill"]
         ))
     }

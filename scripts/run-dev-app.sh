@@ -3,7 +3,7 @@
 set -euo pipefail
 
 repo_dir=${0:a:h:h}
-build_log=$(mktemp -t taskhelm-build)
+build_log=$(mktemp -t magpie-build)
 trap 'rm -f "$build_log"' EXIT
 
 if ! app_path=$("$repo_dir/scripts/build-app.sh" debug 2>"$build_log"); then
@@ -14,4 +14,4 @@ fi
 rm -f "$build_log"
 trap - EXIT
 
-exec "$app_path/Contents/MacOS/TaskHelm"
+exec "$app_path/Contents/MacOS/Magpie"

@@ -53,7 +53,7 @@ final class SettingsPanelController: NSWindowController {
             backing: .buffered,
             defer: false
         )
-        panel.title = "TaskHelm Settings"
+        panel.title = "Magpie Settings"
         panel.isFloatingPanel = true
         panel.level = .floating
         panel.hidesOnDeactivate = false

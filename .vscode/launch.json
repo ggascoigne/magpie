@@ -4,21 +4,21 @@
       "type": "swift",
       "request": "launch",
       "args": [],
-      "cwd": "${workspaceFolder:taskhelm}",
-      "name": "Debug TaskHelm",
-      "target": "TaskHelm",
+      "cwd": "${workspaceFolder:magpie}",
+      "name": "Debug Magpie",
+      "target": "Magpie",
       "configuration": "debug",
-      "preLaunchTask": "swift: Build Debug TaskHelm"
+      "preLaunchTask": "swift: Build Debug Magpie"
     },
     {
       "type": "swift",
       "request": "launch",
       "args": [],
-      "cwd": "${workspaceFolder:taskhelm}",
-      "name": "Release TaskHelm",
-      "target": "TaskHelm",
+      "cwd": "${workspaceFolder:magpie}",
+      "name": "Release Magpie",
+      "target": "Magpie",
       "configuration": "release",
-      "preLaunchTask": "swift: Build Release TaskHelm"
+      "preLaunchTask": "swift: Build Release Magpie"
     }
   ]
 }

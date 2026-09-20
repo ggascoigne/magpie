@@ -10,7 +10,7 @@ struct QuickCaptureView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("TaskHelm — New Task")
+                Text("Magpie — New Task")
                     .font(.headline)
 
                 Spacer()

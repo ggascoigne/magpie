@@ -1,5 +1,5 @@
 import SwiftUI
-import TaskHelmCore
+import MagpieCore
 
 struct SettingsView: View {
     @ObservedObject var settings: AppSettings
@@ -59,7 +59,7 @@ struct SettingsView: View {
                     }
 
                 if settings.capturesSelectedText {
-                    Text("TaskHelm must be enabled in System Settings → Privacy & Security → Accessibility.")
+                    Text("Magpie must be enabled in System Settings → Privacy & Security → Accessibility.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

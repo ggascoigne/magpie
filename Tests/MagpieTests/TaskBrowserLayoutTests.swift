@@ -1,9 +1,9 @@
 import AppKit
 import SwiftUI
 import Testing
-import TaskHelmCore
+import MagpieCore
 import UniformTypeIdentifiers
-@testable import TaskHelm
+@testable import Magpie
 
 @MainActor
 @Suite("Task Browser layout")

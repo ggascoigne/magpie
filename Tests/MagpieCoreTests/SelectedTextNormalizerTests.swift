@@ -1,5 +1,5 @@
 import Testing
-@testable import TaskHelmCore
+@testable import MagpieCore
 
 @Suite("Selected text normalization")
 struct SelectedTextNormalizerTests {

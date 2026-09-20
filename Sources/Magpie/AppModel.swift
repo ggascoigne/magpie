@@ -1,6 +1,6 @@
 import AppKit
 import Combine
-import TaskHelmCore
+import MagpieCore
 
 @MainActor
 final class AppModel: ObservableObject {

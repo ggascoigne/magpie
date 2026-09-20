@@ -1,5 +1,5 @@
 import Foundation
-import TaskHelmCore
+import MagpieCore
 
 enum BrowserBoardColumn: String, CaseIterable, Identifiable {
     case backlog

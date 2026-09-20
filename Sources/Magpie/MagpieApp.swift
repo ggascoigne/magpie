@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 @main
-struct TaskHelmApp: App {
+struct MagpieApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var model = AppModel()
 
@@ -14,7 +14,7 @@ struct TaskHelmApp: App {
         }
         .menuBarExtraStyle(.menu)
 
-        Window("TaskHelm — Task Browser", id: "task-browser") {
+        Window("Magpie — Task Browser", id: "task-browser") {
             TaskBrowserRootView(
                 settings: model.settings,
                 onAddTask: { model.showQuickCapture(includeSelectedText: false) }
@@ -45,7 +45,7 @@ private struct MenuBarLabel: View {
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        Label("TaskHelm", systemImage: "checkmark.circle")
+        Label("Magpie", systemImage: "checkmark.circle")
             .onAppear {
                 model.configureTaskBrowserPresenter {
                     openWindow(id: "task-browser")
@@ -77,13 +77,18 @@ private struct MenuBarContent: View {
 
         Divider()
 
+        Button("About Magpie") {
+            NSApp.orderFrontStandardAboutPanel(nil)
+            NSApp.activate(ignoringOtherApps: true)
+        }
+
         Button("Settings…") {
             model.showSettings()
         }
 
         Divider()
 
-        Button("Quit TaskHelm") {
+        Button("Quit Magpie") {
             NSApp.terminate(nil)
         }
         .keyboardShortcut("q")

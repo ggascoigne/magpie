@@ -2,7 +2,7 @@ import AppKit
 import Carbon.HIToolbox
 import SwiftUI
 import Testing
-@testable import TaskHelm
+@testable import Magpie
 
 @MainActor
 @Suite("Settings panel", .serialized)
