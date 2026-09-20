@@ -17,15 +17,17 @@ The current implementation includes Quick Capture and a native Task Browser with
 ## Build and test
 
 ```sh
-swift test
-./scripts/build-app.sh debug
+make test
+make debug
 ```
 
 The application bundle is written to `build/Magpie.app`. Run it during development with:
 
 ```sh
-./scripts/run-dev-app.sh
+make run
 ```
+
+Run `make help` to see all available targets, including `make release` and `make clean`.
 
 Development builds use a stable local designated requirement so macOS privacy grants survive rebuilds. Set
 `MAGPIE_SIGNING_IDENTITY` to use an installed Apple or local code-signing identity instead.
