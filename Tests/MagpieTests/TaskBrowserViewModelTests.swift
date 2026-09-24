@@ -93,6 +93,21 @@ struct TaskBrowserViewModelTests {
         #expect(restored.view == .board)
     }
 
+    @Test func hidesAndPersistsTheDoneBoardColumn() {
+        let defaults = ephemeralDefaults()
+        let model = TaskBrowserViewModel(client: BrowserClient(results: []), defaults: defaults)
+
+        #expect(model.showsDoneColumn)
+        #expect(model.boardColumns.map(\.id) == [.backlog, .todo, .inProgress, .done])
+
+        model.setShowsDoneColumn(false)
+
+        #expect(model.boardColumns.map(\.id) == [.backlog, .todo, .inProgress])
+        let restored = TaskBrowserViewModel(client: BrowserClient(results: []), defaults: defaults)
+        #expect(!restored.showsDoneColumn)
+        #expect(restored.boardColumns.map(\.id) == [.backlog, .todo, .inProgress])
+    }
+
     @Test func assignsAndPersistsProjectColors() async {
         let defaults = ephemeralDefaults()
         let model = TaskBrowserViewModel(

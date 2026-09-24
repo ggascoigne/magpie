@@ -466,6 +466,21 @@ struct TaskBrowserView: View {
             .help("Move details pane to the \(alternateDetailsPosition.rawValue)")
             .accessibilityLabel("Move Details to \(alternateDetailsPosition.rawValue.capitalized)")
 
+            if model.view == .board {
+                Menu {
+                    Toggle(
+                        "Show Done Column",
+                        isOn: Binding(
+                            get: { model.showsDoneColumn },
+                            set: model.setShowsDoneColumn
+                        )
+                    )
+                } label: {
+                    toolbarLabel("Board Options", systemImage: "ellipsis.circle")
+                }
+                .accessibilityLabel("Board Options")
+            }
+
             Button {
                 Task { await model.refresh() }
             } label: {

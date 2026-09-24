@@ -38,6 +38,7 @@ final class TaskBrowserViewModel: ObservableObject {
     @Published private(set) var detailsPosition: BrowserDetailsPosition
     @Published private(set) var rightDetailsWidth: Double
     @Published private(set) var bottomDetailsHeight: Double
+    @Published private(set) var showsDoneColumn: Bool
     @Published var edits: TaskEdits?
     @Published var bulkEdits: BulkTaskEdits?
     @Published private(set) var isMutating = false
@@ -50,6 +51,7 @@ final class TaskBrowserViewModel: ObservableObject {
         static let detailsPosition = "browserDetailsPosition"
         static let rightDetailsWidth = "browserRightDetailsWidth"
         static let bottomDetailsHeight = "browserBottomDetailsHeight"
+        static let showsDoneColumn = "browserShowsDoneColumn"
         static let projectColors = "browserProjectColors"
         static let userSelectedProjectColors = "browserUserSelectedProjectColors"
     }
@@ -81,6 +83,7 @@ final class TaskBrowserViewModel: ObservableObject {
             .flatMap(BrowserDetailsPosition.init(rawValue:)) ?? .right
         rightDetailsWidth = defaults.object(forKey: DefaultsKey.rightDetailsWidth) as? Double ?? 320
         bottomDetailsHeight = defaults.object(forKey: DefaultsKey.bottomDetailsHeight) as? Double ?? 300
+        showsDoneColumn = defaults.object(forKey: DefaultsKey.showsDoneColumn) as? Bool ?? true
     }
 
     init(
@@ -104,6 +107,7 @@ final class TaskBrowserViewModel: ObservableObject {
             .flatMap(BrowserDetailsPosition.init(rawValue:)) ?? .right
         rightDetailsWidth = defaults.object(forKey: DefaultsKey.rightDetailsWidth) as? Double ?? 320
         bottomDetailsHeight = defaults.object(forKey: DefaultsKey.bottomDetailsHeight) as? Double ?? 300
+        showsDoneColumn = defaults.object(forKey: DefaultsKey.showsDoneColumn) as? Bool ?? true
     }
 
     var displayedTasks: [TaskRecord] {
@@ -118,7 +122,14 @@ final class TaskBrowserViewModel: ObservableObject {
         displayedTasks.filter { boardDefinition.column(containing: $0) == column }
     }
 
-    var boardColumns: [BrowserBoardColumnDefinition] { boardDefinition.columns }
+    var boardColumns: [BrowserBoardColumnDefinition] {
+        showsDoneColumn ? boardDefinition.columns : boardDefinition.columns.filter { $0.id != .done }
+    }
+
+    func setShowsDoneColumn(_ showsDoneColumn: Bool) {
+        self.showsDoneColumn = showsDoneColumn
+        defaults.set(showsDoneColumn, forKey: DefaultsKey.showsDoneColumn)
+    }
 
     func projectColor(for project: String) -> ProjectColor? {
         projectColors[project]
