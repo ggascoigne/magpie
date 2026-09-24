@@ -104,6 +104,19 @@ struct SettingsPanelControllerTests {
         #expect(AppSettings(defaults: defaults).quickCaptureShortcut == .defaultQuickCapture)
     }
 
+    @Test func menuUpcomingDaysDefaultsAndEditsArePersisted() {
+        let suite = "MenuUpcomingDaysTests-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.removePersistentDomain(forName: suite)
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let settings = AppSettings(defaults: defaults)
+        #expect(settings.menuUpcomingDays == 7)
+
+        settings.menuUpcomingDays = 14
+        #expect(AppSettings(defaults: defaults).menuUpcomingDays == 14)
+    }
+
     @Test func menuEquivalentsMatchConfiguredGlobalShortcuts() {
         #expect(GlobalShortcut.defaultQuickCapture.menuKeyEquivalent == "t")
         #expect(GlobalShortcut.defaultQuickCapture.menuModifiers == [.control, .option, .command])

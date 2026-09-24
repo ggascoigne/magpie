@@ -290,6 +290,7 @@ final class TaskBrowserViewModel: ObservableObject {
             try await undoMutation(receipt)
             undoReceipt = nil
             hasLoadedMetadata = false
+            NotificationCenter.default.post(name: .taskwarriorTasksChanged, object: nil)
             await refresh()
         } catch {
             errorMessage = error.localizedDescription
@@ -506,12 +507,14 @@ final class TaskBrowserViewModel: ObservableObject {
             }
             undoReceipt = Self.combinedReceipt(receipts)
             hasLoadedMetadata = false
+            NotificationCenter.default.post(name: .taskwarriorTasksChanged, object: nil)
             await refresh()
         } catch {
             let mutationError = error.localizedDescription
             if !receipts.isEmpty {
                 undoReceipt = Self.combinedReceipt(receipts)
                 hasLoadedMetadata = false
+                NotificationCenter.default.post(name: .taskwarriorTasksChanged, object: nil)
                 await refresh()
             }
             errorMessage = mutationError

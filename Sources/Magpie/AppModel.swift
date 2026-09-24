@@ -7,6 +7,8 @@ final class AppModel: ObservableObject {
     let settings: AppSettings
     let launchAtLogin: LaunchAtLoginController
     @Published private(set) var shortcutRegistrationError: String?
+    @Published private(set) var menuTasks: [TaskRecord] = []
+    @Published var taskBrowserSelection: UUID?
 
     private var capturePanel: QuickCapturePanelController?
     private var settingsPanel: SettingsPanelController?
@@ -64,6 +66,17 @@ final class AppModel: ObservableObject {
                 self?.registerTaskBrowserShortcut(shortcut)
             }
             .store(in: &cancellables)
+        settings.$menuUpcomingDays
+            .dropFirst()
+            .sink { [weak self] _ in self?.refreshMenuTasks() }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: .taskwarriorTaskCreated)
+            .sink { [weak self] _ in self?.refreshMenuTasks() }
+            .store(in: &cancellables)
+        NotificationCenter.default.publisher(for: .taskwarriorTasksChanged)
+            .sink { [weak self] _ in self?.refreshMenuTasks() }
+            .store(in: &cancellables)
 
         NotificationCenter.default.publisher(for: NSApplication.didFinishLaunchingNotification)
             .prefix(1)
@@ -109,6 +122,35 @@ final class AppModel: ObservableObject {
         }
         NSApp.activate(ignoringOtherApps: true)
         taskBrowserPresenter?()
+    }
+
+    func showTaskBrowser(selecting taskID: UUID) {
+        taskBrowserSelection = taskID
+        showTaskBrowser()
+    }
+
+    func refreshMenuTasks() {
+        let environment = settings.taskwarriorEnvironment
+        let days = settings.menuUpcomingDays
+        Task {
+            do {
+                let client = TaskwarriorClient(environment: environment, runner: FoundationProcessRunner())
+                let tasks = try await client.tasks(matching: TaskQuery(
+                    view: .next,
+                    rawFilter: "( +ACTIVE or due.before:\(max(days, 1))d )"
+                ))
+                menuTasks = tasks.sorted(by: Self.menuTaskOrder)
+            } catch {
+                menuTasks = []
+            }
+        }
+    }
+
+    private static func menuTaskOrder(_ lhs: TaskRecord, _ rhs: TaskRecord) -> Bool {
+        if lhs.isActive != rhs.isActive { return lhs.isActive }
+        if lhs.due.isEmpty != rhs.due.isEmpty { return !lhs.due.isEmpty }
+        if lhs.due != rhs.due { return lhs.due < rhs.due }
+        return lhs.urgency > rhs.urgency
     }
 
     func requestAccessibilityPermission() {

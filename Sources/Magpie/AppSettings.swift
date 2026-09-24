@@ -9,6 +9,7 @@ final class AppSettings: ObservableObject {
         static let capturesSelectedText = "capturesSelectedText"
         static let quickCaptureShortcut = "quickCaptureShortcut"
         static let taskBrowserShortcut = "taskBrowserShortcut"
+        static let menuUpcomingDays = "menuUpcomingDays"
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
     }
 
@@ -40,6 +41,10 @@ final class AppSettings: ObservableObject {
         }
     }
 
+    @Published var menuUpcomingDays: Int {
+        didSet { defaults.set(menuUpcomingDays, forKey: Key.menuUpcomingDays) }
+    }
+
     private let defaults: UserDefaults
 
     var needsOnboarding: Bool {
@@ -59,6 +64,7 @@ final class AppSettings: ObservableObject {
         taskBrowserShortcut = defaults.data(forKey: Key.taskBrowserShortcut)
             .flatMap { try? JSONDecoder().decode(GlobalShortcut.self, from: $0) }
             ?? .defaultTaskBrowser
+        menuUpcomingDays = max(defaults.object(forKey: Key.menuUpcomingDays) as? Int ?? 7, 1)
 
         if storedQuickCaptureShortcut == .legacyDefaultQuickCapture,
            let data = try? JSONEncoder().encode(GlobalShortcut.defaultQuickCapture) {

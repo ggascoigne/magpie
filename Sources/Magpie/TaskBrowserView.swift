@@ -25,11 +25,17 @@ enum BrowserBoardLayout {
 
 struct TaskBrowserRootView: View {
     @StateObject private var model: TaskBrowserViewModel
+    @Binding private var requestedTaskID: UUID?
     @Environment(\.dismissWindow) private var dismissWindow
     private let onAddTask: () -> Void
 
-    init(settings: AppSettings, onAddTask: @escaping () -> Void) {
+    init(
+        settings: AppSettings,
+        requestedTaskID: Binding<UUID?>,
+        onAddTask: @escaping () -> Void
+    ) {
         self.onAddTask = onAddTask
+        _requestedTaskID = requestedTaskID
         _model = StateObject(
             wrappedValue: TaskBrowserViewModel(
                 loadTasks: { query in
@@ -70,6 +76,18 @@ struct TaskBrowserRootView: View {
             .onExitCommand {
                 dismissWindow(id: "task-browser")
             }
+            .onAppear { selectRequestedTask() }
+            .onChange(of: requestedTaskID) { _, _ in selectRequestedTask() }
+    }
+
+    private func selectRequestedTask() {
+        guard let requestedTaskID else { return }
+        Task {
+            if model.view != .next && model.view != .board {
+                await model.selectView(.next)
+            }
+            model.selection = [requestedTaskID]
+        }
     }
 }
 

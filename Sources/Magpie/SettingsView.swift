@@ -78,6 +78,14 @@ struct SettingsView: View {
                         .foregroundStyle(.red)
                 }
             }
+
+            Section("Menu Bar") {
+                Stepper(
+                    "Show tasks due within \(menuUpcomingDaysLabel)",
+                    value: $settings.menuUpcomingDays,
+                    in: 1...30
+                )
+            }
         }
         .formStyle(.grouped)
         .frame(
@@ -103,5 +111,9 @@ struct SettingsView: View {
                 validationMessage = error.localizedDescription
             }
         }
+    }
+
+    private var menuUpcomingDaysLabel: String {
+        "\(settings.menuUpcomingDays) \(settings.menuUpcomingDays == 1 ? "day" : "days")"
     }
 }

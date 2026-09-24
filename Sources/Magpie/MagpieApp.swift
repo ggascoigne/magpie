@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import MagpieCore
 
 @main
 struct MagpieApp: App {
@@ -17,6 +18,7 @@ struct MagpieApp: App {
         Window("Magpie — Task Browser", id: "task-browser") {
             TaskBrowserRootView(
                 settings: model.settings,
+                requestedTaskID: $model.taskBrowserSelection,
                 onAddTask: { model.showQuickCapture(includeSelectedText: false) }
             )
                 .frame(minWidth: 960, minHeight: 600)
@@ -59,6 +61,20 @@ private struct MenuBarContent: View {
     @ObservedObject var launchAtLogin: LaunchAtLoginController
 
     var body: some View {
+        if !model.menuTasks.isEmpty {
+            Section("Now & Upcoming") {
+                ForEach(model.menuTasks) { task in
+                    Button {
+                        model.showTaskBrowser(selecting: task.uuid)
+                    } label: {
+                        Label(menuTaskTitle(task), systemImage: task.isActive ? "play.circle.fill" : "calendar")
+                    }
+                }
+            }
+
+            Divider()
+        }
+
         Button("Task Browser") {
             model.showTaskBrowser()
         }
@@ -66,6 +82,7 @@ private struct MenuBarContent: View {
             model.settings.taskBrowserShortcut.menuKeyEquivalent,
             modifiers: model.settings.taskBrowserShortcut.menuModifiers
         )
+        .onAppear { model.refreshMenuTasks() }
 
         Button("Quick Capture") {
             model.showQuickCapture()
@@ -92,5 +109,10 @@ private struct MenuBarContent: View {
             NSApp.terminate(nil)
         }
         .keyboardShortcut("q")
+    }
+
+    private func menuTaskTitle(_ task: TaskRecord) -> String {
+        if task.isActive { return "Active: \(task.description)" }
+        return "Due \(browserDueDisplayValue(task.due)): \(task.description)"
     }
 }
