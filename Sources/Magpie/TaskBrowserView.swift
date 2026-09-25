@@ -293,22 +293,34 @@ struct TaskBrowserView: View {
                     Text(task.description)
                         .lineLimit(1)
                 }
+                .onDrag { taskDragProvider(for: task.uuid) }
             }
             .width(min: 220, ideal: 360)
 
-            TableColumn("Project", value: \.project) { task in Text(task.project).lineLimit(1) }
+            TableColumn("Project", value: \.project) { task in
+                Text(task.project).lineLimit(1)
+                    .onDrag { taskDragProvider(for: task.uuid) }
+            }
                 .width(min: 80, ideal: 120)
-            TableColumn("Tags", value: \.tagsText) { task in Text(task.tagsText).lineLimit(1) }
+            TableColumn("Tags", value: \.tagsText) { task in
+                Text(task.tagsText).lineLimit(1)
+                    .onDrag { taskDragProvider(for: task.uuid) }
+            }
                 .width(min: 80, ideal: 130)
             TableColumn("Due", value: \.due) { task in
                 Text(browserDueDisplayValue(task.due)).lineLimit(1)
+                    .onDrag { taskDragProvider(for: task.uuid) }
             }
                 .width(min: 90, ideal: 120)
-            TableColumn("Priority", value: \.priority) { task in Text(task.priority).lineLimit(1) }
+            TableColumn("Priority", value: \.priority) { task in
+                Text(task.priority).lineLimit(1)
+                    .onDrag { taskDragProvider(for: task.uuid) }
+            }
                 .width(65)
             TableColumn("Urgency", value: \.urgency) { task in
                 Text(task.urgency.formatted(.number.precision(.fractionLength(1))))
                     .monospacedDigit()
+                    .onDrag { taskDragProvider(for: task.uuid) }
             }
             .width(70)
         }
@@ -399,7 +411,10 @@ struct TaskBrowserView: View {
             isSelected: isSelected,
             projectColor: model.projectColor(for: task.project)
         ) {
-            model.selectBoardTask(task.uuid)
+            model.selectBoardTask(
+                task.uuid,
+                extendingSelection: NSEvent.modifierFlags.contains(.command)
+            )
         }
         .contextMenu {
             contextMenu(for: [task.uuid])
@@ -407,8 +422,13 @@ struct TaskBrowserView: View {
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("Board Card \(task.uuid.uuidString)")
         .onDrag {
-            NSItemProvider(object: BoardDragPayload.string(for: task.uuid) as NSString)
+            taskDragProvider(for: task.uuid)
         }
+    }
+
+    private func taskDragProvider(for taskID: UUID) -> NSItemProvider {
+        let taskIDs = model.selection.contains(taskID) ? Array(model.selection) : [taskID]
+        return NSItemProvider(object: TaskDragPayload.string(for: taskIDs) as NSString)
     }
 
     private func loadBoardDrop(
@@ -420,7 +440,9 @@ struct TaskBrowserView: View {
         }
         provider.loadObject(ofClass: NSString.self) { item, _ in
             guard let value = item as? NSString,
-                  let taskID = BoardDragPayload.taskID(from: value as String) else { return }
+                  let taskIDs = TaskDragPayload.taskIDs(from: value as String),
+                  taskIDs.count == 1,
+                  let taskID = taskIDs.first else { return }
             Task { @MainActor in
                 _ = handleBoardDrop(taskID, into: destination)
             }
@@ -527,8 +549,8 @@ struct TaskBrowserView: View {
     @ViewBuilder
     private func contextMenu(for selection: Set<UUID>) -> some View {
         let records = model.tasks.filter { selection.contains($0.id) }
-        if !records.isEmpty, !model.isEditing {
-            Button(records.count == 1 ? "Edit" : "Bulk Edit", systemImage: "pencil") {
+        if records.count == 1, !model.isEditing {
+            Button("Edit", systemImage: "pencil") {
                 model.selection = selection
                 DispatchQueue.main.async { model.beginEditing() }
             }
@@ -568,13 +590,13 @@ struct TaskBrowserView: View {
 
     private var commandActions: TaskBrowserCommandActions {
         TaskBrowserCommandActions(
-            canEdit: model.selectionCount > 0 && !model.isMutating && !model.isEditing,
+            canEdit: model.selectionCount == 1 && !model.isMutating && !model.isEditing,
             canStart: model.selectionCanStart && !model.isMutating && !model.isEditing,
             canStop: model.selectionCanStop && !model.isMutating && !model.isEditing,
             canComplete: model.selectionCanComplete && !model.isMutating && !model.isEditing,
             canDelete: model.selectionCount > 0 && !model.isMutating && !model.isEditing,
             canUndo: model.canUndo && !model.isEditing,
-            editTitle: model.selectionCount > 1 ? "Bulk Edit Tasks" : "Edit Task",
+            editTitle: "Edit Task",
             edit: model.beginEditing,
             start: { Task { await model.startSelected() } },
             stop: { Task { await model.stopSelected() } },
@@ -601,16 +623,18 @@ private struct PendingBoardPriorityDrop {
     let destination: BrowserBoardColumn
 }
 
-enum BoardDragPayload {
-    private static let prefix = "twmac-board-task:"
+enum TaskDragPayload {
+    private static let prefix = "magpie-task:"
 
-    static func string(for taskID: UUID) -> String {
-        prefix + taskID.uuidString.lowercased()
+    static func string(for taskIDs: [UUID]) -> String {
+        prefix + taskIDs.map { $0.uuidString.lowercased() }.sorted().joined(separator: ",")
     }
 
-    static func taskID(from value: String) -> UUID? {
+    static func taskIDs(from value: String) -> [UUID]? {
         guard value.hasPrefix(prefix) else { return nil }
-        return UUID(uuidString: String(value.dropFirst(prefix.count)))
+        let values = value.dropFirst(prefix.count).split(separator: ",")
+        let taskIDs = values.compactMap { UUID(uuidString: String($0)) }
+        return taskIDs.count == values.count && !taskIDs.isEmpty ? taskIDs : nil
     }
 }
 
@@ -731,6 +755,7 @@ private struct BrowserResizeHandle: View {
 private struct BrowserSidebar: View {
     @ObservedObject var model: TaskBrowserViewModel
     @State private var showsCompletedProjects = false
+    @State private var taskDropTarget: SidebarTaskDropTarget?
 
     var body: some View {
         List {
@@ -778,9 +803,7 @@ private struct BrowserSidebar: View {
                         Task { await model.clearFacetSelections() }
                     }
                     ForEach(model.tags, id: \.self) { tag in
-                        sidebarButton(tag, icon: "tag", selected: model.selectedTags.contains(tag)) {
-                            Task { await model.toggleTag(tag) }
-                        }
+                        tagRow(tag)
                     }
                 }
             }
@@ -827,6 +850,62 @@ private struct BrowserSidebar: View {
         .listRowBackground(
             model.selectedProjects.contains(project) ? Color.accentColor.opacity(0.18) : Color.clear
         )
+        .padding(.trailing, 4)
+        .background(taskDropTarget == .project(project) ? Color.accentColor.opacity(0.18) : Color.clear)
+        .onDrop(
+            of: [.utf8PlainText],
+            isTargeted: dropTargetBinding(for: .project(project))
+        ) { providers in
+            loadTaskDrop(from: providers) { taskIDs in
+                await model.assignProject(project, to: taskIDs)
+            }
+        }
+    }
+
+    private func tagRow(_ tag: String) -> some View {
+        sidebarButton(tag, icon: "tag", selected: model.selectedTags.contains(tag)) {
+            Task { await model.toggleTag(tag) }
+        }
+        .background(taskDropTarget == .tag(tag) ? Color.accentColor.opacity(0.18) : Color.clear)
+        .onDrop(
+            of: [.utf8PlainText],
+            isTargeted: dropTargetBinding(for: .tag(tag))
+        ) { providers in
+            loadTaskDrop(from: providers) { taskIDs in
+                await model.addTag(tag, to: taskIDs)
+            }
+        }
+    }
+
+    private func dropTargetBinding(for target: SidebarTaskDropTarget) -> Binding<Bool> {
+        Binding(
+            get: { taskDropTarget == target },
+            set: { targeted in
+                if targeted {
+                    taskDropTarget = target
+                } else if taskDropTarget == target {
+                    taskDropTarget = nil
+                }
+            }
+        )
+    }
+
+    private func loadTaskDrop(
+        from providers: [NSItemProvider],
+        apply: @escaping @MainActor ([UUID]) async -> Bool
+    ) -> Bool {
+        guard let provider = providers.first(where: { $0.canLoadObject(ofClass: NSString.self) }) else {
+            return false
+        }
+        provider.loadObject(ofClass: NSString.self) { item, _ in
+            guard let value = item as? NSString,
+                  let taskIDs = TaskDragPayload.taskIDs(from: value as String) else { return }
+            Task { @MainActor in
+                _ = await apply(taskIDs)
+                taskDropTarget = nil
+            }
+        }
+        return true
     }
 
     private func icon(for view: BrowserViewKind) -> String {
@@ -846,6 +925,11 @@ private struct BrowserSidebar: View {
         case .board: "Kanban view combining tasks from Next with completed tasks."
         }
     }
+}
+
+private enum SidebarTaskDropTarget: Hashable {
+    case project(String)
+    case tag(String)
 }
 
 private struct ProjectColorBar: View {
@@ -945,12 +1029,12 @@ private struct TaskInspector: View {
 
     private var actionBar: some View {
         HStack(spacing: 8) {
-            Button {
-                model.beginEditing()
-            } label: {
-                Label(model.selectionCount == 1 ? "Edit" : "Bulk Edit", systemImage: "pencil")
+            if model.selectionCount == 1 {
+                Button(action: model.beginEditing) {
+                    Label("Edit", systemImage: "pencil")
+                }
+                .disabled(model.isMutating || model.isEditing)
             }
-            .disabled(model.isMutating || model.isEditing)
 
             if model.selectionCanStart {
                 Button {

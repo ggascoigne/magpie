@@ -181,14 +181,14 @@ struct TaskBrowserLayoutTests {
         #expect(selected)
     }
 
-    @Test func boardDragPayloadUsesAConcreteTextTypeAndRoundTripsTheTaskID() {
-        let taskID = UUID()
-        let value = BoardDragPayload.string(for: taskID)
+    @Test func taskDragPayloadUsesAConcreteTextTypeAndRoundTripsTaskIDs() {
+        let taskIDs = [UUID(), UUID()]
+        let value = TaskDragPayload.string(for: taskIDs)
         let provider = NSItemProvider(object: value as NSString)
 
         #expect(provider.hasItemConformingToTypeIdentifier(UTType.utf8PlainText.identifier))
-        #expect(BoardDragPayload.taskID(from: value) == taskID)
-        #expect(BoardDragPayload.taskID(from: taskID.uuidString) == nil)
+        #expect(Set(TaskDragPayload.taskIDs(from: value) ?? []) == Set(taskIDs))
+        #expect(TaskDragPayload.taskIDs(from: taskIDs[0].uuidString) == nil)
     }
 
     @Test func projectColorWellIsCircularAndUsesItsNativeAnchoredPicker() throws {

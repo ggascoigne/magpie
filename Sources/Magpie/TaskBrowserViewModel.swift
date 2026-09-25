@@ -119,7 +119,9 @@ final class TaskBrowserViewModel: ObservableObject {
     }
 
     func tasks(in column: BrowserBoardColumn) -> [TaskRecord] {
-        displayedTasks.filter { boardDefinition.column(containing: $0) == column }
+        let columnTasks = displayedTasks.filter { boardDefinition.column(containing: $0) == column }
+        guard column == .done else { return columnTasks }
+        return columnTasks.sorted(by: compareCompletionDate)
     }
 
     var boardColumns: [BrowserBoardColumnDefinition] {
@@ -142,8 +144,16 @@ final class TaskBrowserViewModel: ObservableObject {
         persistProjectColors()
     }
 
-    func selectBoardTask(_ uuid: UUID) {
-        selection = [uuid]
+    func selectBoardTask(_ uuid: UUID, extendingSelection: Bool = false) {
+        guard extendingSelection else {
+            selection = [uuid]
+            return
+        }
+        if selection.contains(uuid) {
+            selection.remove(uuid)
+        } else {
+            selection.insert(uuid)
+        }
     }
 
     func canDropBoardTask(_ uuid: UUID, into column: BrowserBoardColumn) -> Bool {
@@ -200,7 +210,7 @@ final class TaskBrowserViewModel: ObservableObject {
     }
 
     var canUndo: Bool { undoReceipt != nil && !isMutating }
-    var isEditing: Bool { edits != nil || bulkEdits != nil }
+    var isEditing: Bool { edits != nil }
     var configuredPriorities: [String] { priorityValues }
 
     func beginEditing() {
@@ -212,8 +222,6 @@ final class TaskBrowserViewModel: ObservableObject {
                 due: task.due,
                 priority: task.priority
             )
-        } else if selectionCount > 1 {
-            bulkEdits = BulkTaskEdits()
         }
     }
 
@@ -225,8 +233,6 @@ final class TaskBrowserViewModel: ObservableObject {
     func saveEditing() async {
         if let task = selectedTask, let edits {
             await mutate(.edit(task.uuid, edits))
-        } else if let bulkEdits, !bulkEdits.isEmpty {
-            await mutate(.bulkEdit(selectedTasks.map(\.uuid), bulkEdits))
         } else {
             return
         }
@@ -261,6 +267,28 @@ final class TaskBrowserViewModel: ObservableObject {
             .map(\.uuid)
         guard !uuids.isEmpty else { return }
         await mutate(uuids.count == 1 ? .stop(uuids[0]) : .stopMany(uuids))
+    }
+
+    @discardableResult
+    func assignProject(_ project: String, to taskIDs: [UUID]) async -> Bool {
+        let matchingTaskIDs = tasks
+            .filter { taskIDs.contains($0.uuid) && $0.project != project }
+            .map(\.uuid)
+        guard !matchingTaskIDs.isEmpty else {
+            return false
+        }
+        return await mutate(.bulkEdit(matchingTaskIDs, BulkTaskEdits(project: project)))
+    }
+
+    @discardableResult
+    func addTag(_ tag: String, to taskIDs: [UUID]) async -> Bool {
+        let matchingTaskIDs = tasks
+            .filter { taskIDs.contains($0.uuid) && !$0.tags.contains(tag) }
+            .map(\.uuid)
+        guard !matchingTaskIDs.isEmpty else {
+            return false
+        }
+        return await mutate(.bulkEdit(matchingTaskIDs, BulkTaskEdits(tagsToAdd: [tag])))
     }
 
     func addNote(_ text: String) async -> Bool {
@@ -554,6 +582,11 @@ final class TaskBrowserViewModel: ObservableObject {
             return lhs.description.localizedCaseInsensitiveCompare(rhs.description) == .orderedAscending
         }
         return sortAscending ? comparison == .orderedAscending : comparison == .orderedDescending
+    }
+
+    private func compareCompletionDate(_ lhs: TaskRecord, _ rhs: TaskRecord) -> Bool {
+        if lhs.end != rhs.end { return lhs.end > rhs.end }
+        return lhs.description.localizedCaseInsensitiveCompare(rhs.description) == .orderedAscending
     }
 
     private func compare(_ lhs: Double, _ rhs: Double) -> ComparisonResult {

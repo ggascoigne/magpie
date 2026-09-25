@@ -187,6 +187,29 @@ struct TaskBrowserViewModelTests {
         #expect(model.tasks(in: .done).map(\.description) == ["Completed"])
     }
 
+    @Test func sortsDoneBoardTasksByMostRecentCompletion() async {
+        let oldest = task(
+            description: "Oldest completion",
+            urgency: 100,
+            status: "completed",
+            end: "20260801T120000Z"
+        )
+        let newest = task(
+            description: "Newest completion",
+            urgency: 1,
+            status: "completed",
+            end: "20260803T120000Z"
+        )
+        let model = TaskBrowserViewModel(
+            client: BrowserClient(results: [[oldest, newest]]),
+            defaults: ephemeralDefaults()
+        )
+
+        await model.refresh()
+
+        #expect(model.tasks(in: .done).map(\.description) == ["Newest completion", "Oldest completion"])
+    }
+
     @Test func standardBoardDefinesDropRulesIndependentlyOfTheView() {
         let board = BrowserBoardDefinition.standard
         let backlog = task(description: "Backlog")
@@ -536,7 +559,7 @@ struct TaskBrowserViewModelTests {
         ])
     }
 
-    @Test func bulkEditingProducesOneUndoableMutation() async {
+    @Test func multiSelectionDoesNotOpenAnEditor() async {
         let first = task(description: "First", project: "Old", tags: ["remove"])
         let second = task(description: "Second")
         var mutations: [TaskMutation] = []
@@ -556,17 +579,52 @@ struct TaskBrowserViewModelTests {
         model.selection = [first.uuid, second.uuid]
 
         model.beginEditing()
-        model.bulkEdits = BulkTaskEdits(project: "New", tagsToAdd: ["add"], tagsToRemove: ["remove"])
-        await model.saveEditing()
 
-        #expect(mutations == [
-            .bulkEdit(
-                [first.uuid, second.uuid],
-                BulkTaskEdits(project: "New", tagsToAdd: ["add"], tagsToRemove: ["remove"])
-            )
-        ])
+        #expect(mutations.isEmpty)
         #expect(!model.isEditing)
-        #expect(model.canUndo)
+        #expect(model.bulkEdits == nil)
+    }
+
+    @Test func droppingATaskOntoProjectOrTagUsesUndoableBulkEdits() async {
+        let first = task(description: "First", project: "Old", tags: ["existing"])
+        let second = task(description: "Second", project: "Elsewhere")
+        var mutations: [TaskMutation] = []
+        let model = TaskBrowserViewModel(
+            defaults: ephemeralDefaults(),
+            loadTasks: { _ in [first, second] },
+            loadMetadata: {
+                TaskwarriorMetadata(projects: ["New"], tags: ["new"], priorities: [], context: nil)
+            },
+            performMutation: { mutation in
+                mutations.append(mutation)
+                return TaskMutationReceipt(changes: [:], feedback: "")
+            },
+            undoMutation: { _ in }
+        )
+        await model.refresh()
+
+        #expect(await model.assignProject("New", to: [first.uuid, second.uuid]))
+        #expect(await model.addTag("new", to: [first.uuid, second.uuid]))
+        #expect(!(await model.addTag("existing", to: [first.uuid])))
+        #expect(mutations == [
+            .bulkEdit([first.uuid, second.uuid], BulkTaskEdits(project: "New")),
+            .bulkEdit([first.uuid, second.uuid], BulkTaskEdits(tagsToAdd: ["new"])),
+        ])
+    }
+
+    @Test func commandSelectingBoardTasksBuildsAMultiSelection() async {
+        let first = task(description: "First")
+        let second = task(description: "Second")
+        let model = TaskBrowserViewModel(
+            client: BrowserClient(results: [[first, second]]),
+            defaults: ephemeralDefaults()
+        )
+        await model.refresh()
+
+        model.selectBoardTask(first.uuid)
+        model.selectBoardTask(second.uuid, extendingSelection: true)
+
+        #expect(model.selection == [first.uuid, second.uuid])
     }
 
     @Test func selectionDrivenCommandsTrackTaskApplicability() async {
@@ -617,6 +675,7 @@ struct TaskBrowserViewModelTests {
         due: String = "",
         status: String = "pending",
         isActive: Bool = false,
+        end: String = "",
         annotations: [TaskAnnotation] = []
     ) -> TaskRecord {
         var fields: [String: JSONValue] = [
@@ -629,6 +688,7 @@ struct TaskBrowserViewModelTests {
             "status": .string(status),
         ]
         if isActive { fields["start"] = .string("20260803T120000Z") }
+        if !end.isEmpty { fields["end"] = .string(end) }
         if !due.isEmpty { fields["due"] = .string(due) }
         if !annotations.isEmpty {
             fields["annotations"] = .array(annotations.map { annotation in

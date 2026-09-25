@@ -88,6 +88,7 @@ public struct TaskRecord: Codable, Equatable, Identifiable, Sendable {
     public var priority: String { string("priority") }
     public var urgency: Double { number("urgency") }
     public var status: String { string("status") }
+    public var end: String { string("end") }
     public var isActive: Bool { fields["start"] != nil && fields["end"] == nil }
     public var isRecurring: Bool { fields["recur"] != nil || status == "recurring" }
     public var annotations: [TaskAnnotation] {
